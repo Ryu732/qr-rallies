@@ -9,11 +9,10 @@ import (
 
 func main() {
     router := gin.Default()
-
     
     router.GET("/test", func(c *gin.Context) {
         c.JSON(http.StatusOK, gin.H{
-            "status": "ok",
+            "status": "ok!",
         })
     })
 

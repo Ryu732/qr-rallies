@@ -1,0 +1,35 @@
+services:
+  app:
+    build: .
+    container_name: myapp
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=myapp_dev
+    depends_on:
+      - db
+    volumes:
+      - ./:/app
+      - /app/tmp
+      - go_modules_cache:/go/pkg/mod
+    command: ["air", "-c", ".air.toml"]
+
+  db:
+    image: postgres:15-alpine
+    container_name: myapp_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: myapp_dev
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
+  go_modules_cache:
