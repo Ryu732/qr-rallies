@@ -2,11 +2,7 @@
 
 ## 内容
 
-xxx の改修をしました。
-
-## 動作確認項目
-
-- [x] xxxxxx
+xxx を追加しました。
 
 <!-- for GitHub Copilot review rule -->
 <!--
