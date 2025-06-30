@@ -17,7 +17,7 @@ func SettingEnv() {
 		if value == "" {
 			log.Printf("警告: %s が設定されていません", env)
 		} else {
-			log.Printf("%s: %s", env, value)
+			log.Printf("%s: が正しく設定されています", env)
 		}
 	}
 }
