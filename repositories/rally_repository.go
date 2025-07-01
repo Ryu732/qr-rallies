@@ -7,6 +7,7 @@ import (
 
 type IRallyRepository interface {
 	FindAllRallies() (*[]models.Rally, error)
+	FindRallyByID(id uint) (*models.Rally, error)
 }
 
 // データベース用のRepository
@@ -27,4 +28,15 @@ func (r *RallyRepository) FindAllRallies() (*[]models.Rally, error) {
 	}
 
 	return &rallies, nil
+}
+
+// RallyRepository用のFindRallyByIDメソッドを実装
+func (r *RallyRepository) FindRallyByID(id uint) (*models.Rally, error) {
+	var rally models.Rally
+
+	if err := r.database.First(&rally, id).Error; err != nil {
+		return nil, err
+	}
+
+	return &rally, nil
 }
