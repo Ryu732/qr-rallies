@@ -1,12 +1,15 @@
 package controller
 
 import (
+	"strconv"
+
 	"github.com/Ryu732/qr-rallies/repositories"
 	"github.com/gin-gonic/gin"
 )
 
 type IRallyController interface {
 	FindAllRallies(ctx *gin.Context)
+	FindRallyByID(ctx *gin.Context)
 }
 
 type RallyController struct {
@@ -28,5 +31,24 @@ func (c *RallyController) FindAllRallies(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"message": "全てのラリーを取得しました",
 		"data":    rallies,
+	})
+}
+
+func (c *RallyController) FindRallyByID(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "無効なIDです"})
+		return
+	}
+
+	rally, err := c.repository.FindRallyByID(uint(id))
+	if err != nil {
+		ctx.JSON(404, gin.H{"error": "ラリーが見つかりません"})
+		return
+	}
+	ctx.JSON(200, gin.H{
+		"message": "ラリーを取得しました",
+		"data":    rally,
 	})
 }

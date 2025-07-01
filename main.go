@@ -22,6 +22,7 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	rallyRouter := router.Group("/rallies")
 
 	rallyRouter.GET("", RallyController.FindAllRallies)
+	rallyRouter.GET("/:id", RallyController.FindRallyByID)
 
 	return router
 }
