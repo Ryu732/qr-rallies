@@ -19,10 +19,10 @@ func NewRallyRepository(database *gorm.DB) IRallyRepository {
 }
 
 // RallyRepository用のFindAllRalliesメソッドを実装
-func (repo *RallyRepository) FindAllRallies() (*[]models.Rally, error) {
+func (r *RallyRepository) FindAllRallies() (*[]models.Rally, error) {
 	var rallies []models.Rally
 
-	if err := repo.database.Find(&rallies).Error; err != nil {
+	if err := r.database.Find(&rallies).Error; err != nil {
 		return nil, err
 	}
 
