@@ -6,7 +6,7 @@ import (
 )
 
 type IRallyRepository interface {
-	FindAllRallies() (*[]models.Rally, error)
+	FindAllRallies() (*[]RallyNameResponse, error)
 	FindRallyByID(id uint) (*models.Rally, error)
 	CreateRally(rally *models.Rally) (*models.Rally, error)
 	DeleteRally(id uint) error
@@ -21,11 +21,19 @@ func NewRallyRepository(database *gorm.DB) IRallyRepository {
 	return &RallyRepository{database: database}
 }
 
-// RallyRepository用のFindAllRalliesメソッドを実装
-func (r *RallyRepository) FindAllRallies() (*[]models.Rally, error) {
-	var rallies []models.Rally
+// レスポンス用の構造体
+type RallyNameResponse struct {
+	ID        uint   `json:"id"`
+	RallyName string `json:"rally_name"`
+}
 
-	if err := r.database.Find(&rallies).Error; err != nil {
+// RallyRepository用のFindAllRalliesメソッドを実装
+func (r *RallyRepository) FindAllRallies() (*[]RallyNameResponse, error) {
+	var rallies []RallyNameResponse
+
+	if err := r.database.Model(&models.Rally{}).
+		Select("id", "rally_name").
+		Find(&rallies).Error; err != nil {
 		return nil, err
 	}
 
