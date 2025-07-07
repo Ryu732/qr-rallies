@@ -12,6 +12,7 @@ type IRallyController interface {
 	FindAllRallies(ctx *gin.Context)
 	FindRallyByID(ctx *gin.Context)
 	CreateRally(ctx *gin.Context)
+	DeleteRally(ctx *gin.Context)
 }
 
 type RallyController struct {
@@ -71,5 +72,24 @@ func (c *RallyController) CreateRally(ctx *gin.Context) {
 	ctx.JSON(201, gin.H{
 		"message": "ラリーを作成しました",
 		"data":    createdRally,
+	})
+}
+
+func (c *RallyController) DeleteRally(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "無効なIDです"})
+		return
+	}
+
+	err = c.repository.DeleteRally(uint(id))
+	if err != nil {
+		ctx.JSON(404, gin.H{"error": "ラリーが見つかりません"})
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"message": "ラリーを削除しました",
 	})
 }
