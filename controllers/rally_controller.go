@@ -13,6 +13,7 @@ type IRallyController interface {
 	FindRallyByID(ctx *gin.Context)
 	CreateRally(ctx *gin.Context)
 	DeleteRally(ctx *gin.Context)
+	LoginRally(ctx *gin.Context)
 }
 
 type RallyController struct {
@@ -91,5 +92,42 @@ func (c *RallyController) DeleteRally(ctx *gin.Context) {
 
 	ctx.JSON(200, gin.H{
 		"message": "ラリーを削除しました",
+	})
+}
+
+func (c *RallyController) LoginRally(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "無効なIDです"})
+		return
+	}
+
+	// パスワードを含むリクエストボディを構造体にバインド
+	var loginRequest struct {
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&loginRequest); err != nil {
+		ctx.JSON(400, gin.H{"error": "パスワードが必要です"})
+		return
+	}
+
+	// ラリーIDからパスワードを取得
+	rally, err := c.repository.FindRallyByID(uint(id))
+	if err != nil {
+		ctx.JSON(404, gin.H{"error": "ラリーが見つかりません"})
+		return
+	}
+
+	// パスワード照合
+	if rally.Password != loginRequest.Password {
+		ctx.JSON(401, gin.H{"error": "パスワードが間違っています"})
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"message": "ログインしました",
+		"data":    rally,
 	})
 }

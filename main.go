@@ -25,6 +25,7 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	rallyRouter.GET("/:id", RallyController.FindRallyByID)
 	rallyRouter.POST("", RallyController.CreateRally)
 	rallyRouter.DELETE(":id", RallyController.DeleteRally)
+	rallyRouter.POST("/login/:id", RallyController.LoginRally)
 
 	return router
 }
