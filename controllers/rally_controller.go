@@ -3,6 +3,7 @@ package controller
 import (
 	"strconv"
 
+	"github.com/Ryu732/qr-rallies/models"
 	"github.com/Ryu732/qr-rallies/repositories"
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +11,7 @@ import (
 type IRallyController interface {
 	FindAllRallies(ctx *gin.Context)
 	FindRallyByID(ctx *gin.Context)
+	CreateRally(ctx *gin.Context)
 }
 
 type RallyController struct {
@@ -50,5 +52,24 @@ func (c *RallyController) FindRallyByID(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"message": "ラリーを取得しました",
 		"data":    rally,
+	})
+}
+
+func (c *RallyController) CreateRally(ctx *gin.Context) {
+	var rally models.Rally
+	if err := ctx.ShouldBindJSON(&rally); err != nil {
+		ctx.JSON(400, gin.H{"error": "無効なリクエストボディです"})
+		return
+	}
+
+	createdRally, err := c.repository.CreateRally(&rally)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "ラリーの作成に失敗しました"})
+		return
+	}
+
+	ctx.JSON(201, gin.H{
+		"message": "ラリーを作成しました",
+		"data":    createdRally,
 	})
 }

@@ -8,6 +8,7 @@ import (
 type IRallyRepository interface {
 	FindAllRallies() (*[]models.Rally, error)
 	FindRallyByID(id uint) (*models.Rally, error)
+	CreateRally(rally *models.Rally) (*models.Rally, error)
 }
 
 // データベース用のRepository
@@ -39,4 +40,12 @@ func (r *RallyRepository) FindRallyByID(id uint) (*models.Rally, error) {
 	}
 
 	return &rally, nil
+}
+
+func (r *RallyRepository) CreateRally(rally *models.Rally) (*models.Rally, error) {
+	if err := r.database.Create(rally).Error; err != nil {
+		return nil, err
+	}
+
+	return rally, nil
 }
