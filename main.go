@@ -8,6 +8,7 @@ import (
 	controller "github.com/Ryu732/qr-rallies/controllers"
 	"github.com/Ryu732/qr-rallies/db"
 	"github.com/Ryu732/qr-rallies/infra"
+	"github.com/Ryu732/qr-rallies/models"
 	"github.com/Ryu732/qr-rallies/repositories"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -22,6 +23,28 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 
 	router := gin.Default()
 	router.Use(cors.Default())
+
+	// ヘルスチェック用エンドポイント
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "QR Rally API is running",
+			"status":  "healthy",
+		})
+	})
+
+	// 手動マイグレーション用エンドポイント
+	router.POST("/migrate", func(c *gin.Context) {
+		log.Printf("手動マイグレーション開始...")
+
+		if err := db.AutoMigrate(&models.Rally{}, &models.Stamp{}); err != nil {
+			log.Printf("マイグレーションエラー: %v", err)
+			c.JSON(500, gin.H{"error": "マイグレーション失敗", "details": err.Error()})
+			return
+		}
+
+		log.Printf("手動マイグレーション完了")
+		c.JSON(200, gin.H{"message": "マイグレーション完了"})
+	})
 
 	// ルーティンググループ
 	rallyRouter := router.Group("/rallies")
