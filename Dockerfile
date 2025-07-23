@@ -1,27 +1,20 @@
-# Dockerfile
-FROM golang:1.24.1-alpine
+FROM golang:1.24-alpine AS builder
 
-# 必要なパッケージをインストール
-RUN apk add --no-cache git
-
-# 作業ディレクトリを設定
 WORKDIR /app
 
-# Airをインストール（ホットリロード用）
-RUN go install github.com/air-verse/air@latest
-
-# go.modとgo.sumをコピーして依存関係をダウンロード
 COPY go.mod go.sum ./
 RUN go mod download
 
-# ポートを公開
-EXPOSE 8080
+COPY . .
 
-# Air設定ファイルをコピー
-COPY .air.toml .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
-# tmpディレクトリを作成
-RUN mkdir -p tmp
+FROM alpine:latest
 
-# デフォルトでAirを起動
-CMD ["air", "-c", ".air.toml"]
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+COPY --from=builder /app/main .
+
+CMD ["./main"]

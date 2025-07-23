@@ -3,21 +3,27 @@ package infra
 import (
 	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func SettingEnv() {
-	// Docker環境では環境変数が既に設定されているため、.envファイルは不要
-	log.Println("環境変数を確認中...")
+	if os.Getenv("DYNO") == "" {
+		if err := godotenv.Load(); err != nil {
+			log.Printf(".envファイルが見つかりません: %v", err)
+		}
+	}
 
-	// 必要な環境変数が設定されているか確認
-	requiredEnvs := []string{"DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME"}
+	// 開発環境時のみ確認
+	if os.Getenv("DYNO") == "" {
+		requiredEnvs := []string{
+			"DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME",
+		}
 
-	for _, env := range requiredEnvs {
-		value := os.Getenv(env)
-		if value == "" {
-			log.Printf("警告: %s が設定されていません", env)
-		} else {
-			log.Printf("%s: が正しく設定されています", env)
+		for _, env := range requiredEnvs {
+			if os.Getenv(env) == "" {
+				log.Printf("警告: %s 環境変数が設定されていません", env)
+			}
 		}
 	}
 }

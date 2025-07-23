@@ -2,6 +2,9 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	controller "github.com/Ryu732/qr-rallies/controllers"
 	"github.com/Ryu732/qr-rallies/db"
 	"github.com/Ryu732/qr-rallies/infra"
@@ -26,7 +29,7 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	rallyRouter.GET("", RallyController.FindAllRallies)
 	rallyRouter.GET("/:id", RallyController.FindRallyByID)
 	rallyRouter.POST("", RallyController.CreateRally)
-	rallyRouter.DELETE(":id", RallyController.DeleteRally)
+	rallyRouter.DELETE("/:id", RallyController.DeleteRally)
 	rallyRouter.POST("/login/:id", RallyController.LoginRally)
 
 	stampRouter := router.Group("/stamps")
@@ -36,10 +39,20 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 }
 
 func main() {
+	// 環境変数を読み込み
 	infra.SettingEnv()
-	db := db.SetupDB()
-	router := setupRouter(db)
 
-	// ポート 8080 で起動
-	router.Run(":8080")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	// データベース接続
+	database := db.SetupDB()
+	router := setupRouter(database)
+
+	log.Printf("Server starting on port %s", port)
+	if err := router.Run(":" + port); err != nil {
+		log.Fatal("Failed to start server:", err)
+	}
 }
