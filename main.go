@@ -14,6 +14,8 @@ import (
 func setupRouter(db *gorm.DB) *gin.Engine {
 	rallyRepository := repositories.NewRallyRepository(db)
 	RallyController := controller.NewRallyController(rallyRepository)
+	stampRepository := repositories.NewStampRepository(db)
+	StampController := controller.NewStampController(stampRepository)
 
 	router := gin.Default()
 	router.Use(cors.Default())
@@ -26,6 +28,9 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	rallyRouter.POST("", RallyController.CreateRally)
 	rallyRouter.DELETE(":id", RallyController.DeleteRally)
 	rallyRouter.POST("/login/:id", RallyController.LoginRally)
+
+	stampRouter := router.Group("/stamps")
+	stampRouter.POST("", StampController.CreateStamp)
 
 	return router
 }
