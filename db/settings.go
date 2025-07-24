@@ -14,9 +14,32 @@ import (
 func SetupDB() *gorm.DB {
 	var dsn string
 
-	// 本番環境
-	if databaseURL := os.Getenv("DATABASE_URL"); databaseURL != "" {
+	// Heroku環境の検出（DYNOまたはHEROKU環境変数の存在で判定）
+	isHeroku := os.Getenv("DYNO") != "" || os.Getenv("HEROKU_APP_NAME") != ""
+
+	// 本番環境（Heroku）
+	if isHeroku {
+		databaseURL := os.Getenv("DATABASE_URL")
+		if databaseURL == "" {
+			log.Fatal("Heroku環境でDATABASE_URLが設定されていません")
+		}
+
 		// HerokuのDATABASE_URLをパース
+		parsedURL, err := url.Parse(databaseURL)
+		if err != nil {
+			log.Fatal("DATABASE_URLのパースエラー:", err)
+		}
+
+		password, _ := parsedURL.User.Password()
+		host := parsedURL.Host
+		dbname := parsedURL.Path[1:] // 先頭の'/'を除去
+
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=require TimeZone=UTC",
+			host, parsedURL.User.Username(), password, dbname)
+
+		log.Printf("Heroku環境でデータベース接続: %s", host)
+	} else if databaseURL := os.Getenv("DATABASE_URL"); databaseURL != "" {
+		// DATABASE_URLが設定されている場合（Heroku以外）
 		parsedURL, err := url.Parse(databaseURL)
 		if err != nil {
 			log.Fatal("DATABASE_URLのパースエラー:", err)
@@ -38,6 +61,8 @@ func SetupDB() *gorm.DB {
 
 		dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=Asia/Tokyo",
 			host, port, user, password, dbname)
+
+		log.Printf("ローカル環境でデータベース接続: %s:%s", host, port)
 	}
 
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
