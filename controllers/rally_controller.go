@@ -105,7 +105,7 @@ func (c *RallyController) LoginRally(ctx *gin.Context) {
 
 	// パスワードを含むリクエストボディを構造体にバインド
 	var loginRequest struct {
-		Password string `json:"password" binding:"required"`
+		Password string `json:"Password" binding:"required"`
 	}
 
 	if err := ctx.ShouldBindJSON(&loginRequest); err != nil {
