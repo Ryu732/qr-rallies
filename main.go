@@ -1,4 +1,4 @@
-// main.go
+// main.go（自動マイグレーション＆airなし対応版）
 package main
 
 import (
@@ -29,26 +29,17 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 		c.JSON(200, gin.H{
 			"message": "QR Rally API is running",
 			"status":  "healthy",
+			"env": gin.H{
+				"port":     os.Getenv("PORT"),
+				"dyno":     os.Getenv("DYNO"),
+				"database": os.Getenv("DATABASE_URL") != "",
+				"openai":   os.Getenv("OPENAI_API_KEY") != "",
+			},
 		})
-	})
-
-	// 手動マイグレーション用エンドポイント
-	router.POST("/migrate", func(c *gin.Context) {
-		log.Printf("手動マイグレーション開始...")
-
-		if err := db.AutoMigrate(&models.Rally{}, &models.Stamp{}); err != nil {
-			log.Printf("マイグレーションエラー: %v", err)
-			c.JSON(500, gin.H{"error": "マイグレーション失敗", "details": err.Error()})
-			return
-		}
-
-		log.Printf("手動マイグレーション完了")
-		c.JSON(200, gin.H{"message": "マイグレーション完了"})
 	})
 
 	// ルーティンググループ
 	rallyRouter := router.Group("/rallies")
-
 	rallyRouter.GET("", RallyController.FindAllRallies)
 	rallyRouter.GET("/:id", RallyController.FindRallyByID)
 	rallyRouter.POST("", RallyController.CreateRally)
@@ -61,21 +52,51 @@ func setupRouter(db *gorm.DB) *gin.Engine {
 	return router
 }
 
+// 自動マイグレーション関数
+func runAutoMigration(database *gorm.DB) {
+	log.Printf("=== 自動マイグレーション開始 ===")
+
+	if err := database.AutoMigrate(&models.Rally{}, &models.Stamp{}); err != nil {
+		log.Fatalf("マイグレーションエラー: %v", err)
+	}
+
+	log.Printf("=== 自動マイグレーション完了 ===")
+}
+
 func main() {
+	log.Printf("=== QR Rally アプリケーション開始 ===")
+
 	// 環境変数を読み込み
 	infra.SettingEnv()
 
+	// ポート設定
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+	log.Printf("ポート設定: %s", port)
+
+	// 環境判定
+	if dyno := os.Getenv("DYNO"); dyno != "" {
+		log.Printf("Heroku環境で実行中: %s", dyno)
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		log.Printf("ローカル環境で実行中")
+	}
 
 	// データベース接続
+	log.Printf("データベース接続開始...")
 	database := db.SetupDB()
+	log.Printf("データベース接続完了")
+
+	// 自動マイグレーション実行
+	runAutoMigration(database)
+
+	// ルーター設定
 	router := setupRouter(database)
 
-	log.Printf("Server starting on port %s", port)
+	log.Printf("=== サーバー起動中... ポート:%s ===", port)
 	if err := router.Run(":" + port); err != nil {
-		log.Fatal("Failed to start server:", err)
+		log.Fatal("サーバー起動失敗:", err)
 	}
 }

@@ -1,7 +1,11 @@
+version: "3.8"
+
 services:
   app:
-    build: .
-    container_name: myapp
+    build:
+      context: .
+      target: development # 開発用ステージを使用
+    container_name: myapp_dev
     ports:
       - "8080:8080"
     environment:
@@ -10,19 +14,22 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=myapp_dev
+      - GIN_MODE=debug
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./:/app
-      - /app/tmp
       - go_modules_cache:/go/pkg/mod
-    command: ["air", "-c", ".air.toml"]
+    working_dir: /app
+    # go runで直接実行（ホットリロードなし）
+    command: ["go", "run", "main.go"]
 
   db:
     image: postgres:15-alpine
-    container_name: myapp_db
+    container_name: myapp_db_dev
     ports:
       - "5432:5432"
     environment:
@@ -31,6 +38,12 @@ services:
       POSTGRES_DB: myapp_dev
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d myapp_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
 volumes:
   db_data:
