@@ -67,8 +67,12 @@ func SetupDB() *gorm.DB {
 
 	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
+		log.Printf("データベース接続エラー: %v", err)
+		log.Printf("データベース接続文字列: %s", dsn)
 		log.Fatal("データベース接続エラー:", err)
 	}
+
+	log.Printf("データベース接続成功!")
 
 	// マイグレーション実行
 	if err := database.AutoMigrate(&models.Rally{}, &models.Stamp{}); err != nil {
