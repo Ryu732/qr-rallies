@@ -31,7 +31,7 @@ func SetupDB() *gorm.DB {
 		}
 
 		password, _ := parsedURL.User.Password()
-		host := parsedURL.Host
+		host := parsedURL.Hostname() // .Hostではなく.Hostname()を使用してポート番号を除外
 		dbname := parsedURL.Path[1:] // 先頭の'/'を除去
 
 		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=require TimeZone=UTC",
@@ -46,7 +46,7 @@ func SetupDB() *gorm.DB {
 		}
 
 		password, _ := parsedURL.User.Password()
-		host := parsedURL.Host
+		host := parsedURL.Hostname() // .Hostではなく.Hostname()を使用
 		dbname := parsedURL.Path[1:] // 先頭の'/'を除去
 
 		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=5432 sslmode=require TimeZone=UTC",
