@@ -146,15 +146,15 @@ func (c *RallyController) CheckRallyName(ctx *gin.Context) {
 		return
 	}
 
+	available := !exists
 	message := "この名前は使用可能です"
-	if exists {
+	if !available {
 		message = "この名前は既に使用されています"
 	}
 
 	ctx.JSON(200, gin.H{
 		"name":      name,
-		"exists":    exists,
-		"available": !exists,
+		"available": available,
 		"message":   message,
 	})
 }
