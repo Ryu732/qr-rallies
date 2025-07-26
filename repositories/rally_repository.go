@@ -10,6 +10,7 @@ type IRallyRepository interface {
 	FindRallyByID(id uint) (*models.Rally, error)
 	CreateRally(rally *models.Rally) (*models.Rally, error)
 	DeleteRally(id uint) error
+	CheckRallyNameExists(name string) (bool, error)
 }
 
 // データベース用のRepository
@@ -67,4 +68,13 @@ func (r *RallyRepository) DeleteRally(id uint) error {
 	}
 
 	return nil
+}
+
+// RallyRepository用のCheckRallyNameExistsメソッドを実装
+func (r *RallyRepository) CheckRallyNameExists(name string) (bool, error) {
+	var count int64
+	if err := r.database.Model(&models.Rally{}).Where("rally_name = ?", name).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }

@@ -14,6 +14,7 @@ type IRallyController interface {
 	CreateRally(ctx *gin.Context)
 	DeleteRally(ctx *gin.Context)
 	LoginRally(ctx *gin.Context)
+	CheckRallyName(ctx *gin.Context)
 }
 
 type RallyController struct {
@@ -129,5 +130,31 @@ func (c *RallyController) LoginRally(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"message": "ログインしました",
 		"data":    rally,
+	})
+}
+
+func (c *RallyController) CheckRallyName(ctx *gin.Context) {
+	name := ctx.Query("name")
+	if name == "" {
+		ctx.JSON(400, gin.H{"error": "名前パラメータが必要です"})
+		return
+	}
+
+	exists, err := c.repository.CheckRallyNameExists(name)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "名前チェックに失敗しました"})
+		return
+	}
+
+	message := "この名前は使用可能です"
+	if exists {
+		message = "この名前は既に使用されています"
+	}
+
+	ctx.JSON(200, gin.H{
+		"name":      name,
+		"exists":    exists,
+		"available": !exists,
+		"message":   message,
 	})
 }
